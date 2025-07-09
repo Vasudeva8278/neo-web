@@ -55,13 +55,12 @@ const Header = ({ toggleNavigation }) => {
                         Login
                     </button>
                     {/* <button
-                        className="bg-white text-customBlue px-4 py-2 rounded-lg"
-                        onClick={() => navigate('/signup')}
+                        className="bg-white text-customBlue px-4 py-2 rounded-lg"                        onClick={() => navigate('/signup')}
                     >
                         Signup
                     </button> */}
                     {/* <button className="bg-white text-customBlue px-4 py-2 rounded-lg">Create Design</button> */}
-                    <button className="text-white p-3 border rounded-lg"><FaBell /></button>
+                  
                 </div>
             </nav>
         </header>

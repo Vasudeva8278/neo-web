@@ -32,12 +32,7 @@ const ProfileHeader = () => {
         onTouchStart={() => setShowName((prev) => !prev)}
       >
         {/* Crown Icon (optional) */}
-        <span className="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-            <path fill="#6366F1" d="M5 17h14v2H5z" />
-            <path fill="#6366F1" d="M5 17l2-7 5 4 5-4 2 7z" />
-          </svg>
-        </span>
+      
         {/* Avatar */}
         <img
           src={user?.profilePic || photo}

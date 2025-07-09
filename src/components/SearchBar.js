@@ -39,7 +39,7 @@ const SearchBar = ({ onSearch }) => {
           </svg>
         </div>
       </div>
-     
+    
     </div>
   );
 };

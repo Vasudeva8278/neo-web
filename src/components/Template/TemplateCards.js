@@ -227,7 +227,9 @@ const Card = ({ docObj, documentId, name, thumbnail,content, handleDelete, handl
             </pre>
           )}
           <div className="flex flex-wrap gap-2 mt-4">
-            <button className="btn-option" onClick={() => alert('Get File')}>Get File</button>
+            <button className="btn-option" onClick={() => alert('Get File')}>edit</button>
+            <button className="btn-option" onClick={() => alert('Get File')}>create</button>
+
             {docObj.type === 'template' && (
               <>
                 <button
@@ -263,6 +265,7 @@ const Card = ({ docObj, documentId, name, thumbnail,content, handleDelete, handl
               </>
             )}
           </div>
+          
         </div>
       </div>
     </>

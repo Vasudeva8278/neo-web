@@ -168,11 +168,11 @@ const Navigation = () => {
         border-r border-white
         flex flex-col
         h-screen
-        overflow-y-auto
+        overflow-y-hidden
         bg-white
         text-white
         transition-all duration-300
-        w-10 sm:w-10 md:w-20
+        w-20
       `}
     >
       {/* Logo Section */}
