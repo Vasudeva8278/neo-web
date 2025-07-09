@@ -277,7 +277,7 @@ const NeoTemplate = () => {
   };
 
   return (
-    <div className='flex w-[100%]'>
+    <div className='flex w-[100%] '>
       <div className='hidden flex flex-col items-start border-r border-gray-200'>
         <div className='flex items-center w-64 h-20 border-b border-gray-300'>
           <img
@@ -313,8 +313,8 @@ const NeoTemplate = () => {
       </div>
 
       <div className='flex flex-col w-full m-2'>
-     
-        <SearchHeader />
+
+
         <div
           className='bg-gradient-to-r from-purple-500 to-blue-500 h-52 rounded-lg mt-4 ml-4 p-10 hidden'
           style={{ height: "220px" }}
@@ -333,7 +333,7 @@ const NeoTemplate = () => {
           <div className='flex mt-4 '>
             <div className='flex flex-col items-center mb-4 w-full '>
               <div
-                className={`flex flex-col items-center justify-center w-52 h-24 border-gray-500     shadow-lg rounded-lg text-white mx-4 ${
+                className={`flex flex-col items-center justify-center w-52 h-24 border-gray-500    shadow-lg rounded-lg text-white mx-4 ${
                   isDragging ? "border-green-500 bg-blue-100" : "border-white"
                 }`}
                 onDragOver={handleDragOver}
@@ -376,19 +376,34 @@ const NeoTemplate = () => {
           </div>
         </div>
         <div className='flex flex-col p-4 space-y-8'>
-          <div className='w-full max-w-5xl'>
+          <div className='w-full'>
             <h2 className='text-2xl font-semibold mb-4 text-left'>
-               Templates
+                Templates
             </h2>
-            <div className='flex justify-center'>
-              {loading && <div>Loading...</div>}
-              <TemplateCards
-                documents={documents}
-                handleDeleteTemplate={handleDeleteTemplate}
-              />
+            <div className="w-full px-1">
+              <div className="bg-red-500 rounded-2xl p-4 sm:p-6 md:p-8 lg:p-10"> {/* Adjusted padding for responsiveness */}
+                <div
+                  className="grid w-full mt-10"
+                  style={{
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', /* Reduced min card width */
+                    gap: '1rem', /* Reduced gap between cards */
+                    justifyItems: 'center', /* Center cards within their grid cells */
+                  }}
+                >
+                  {documents.map((doc) => (
+                    // Directly place TemplateCards component without an extra wrapping div
+                    // This is key to ensuring the grid handles layout without conflicting margins
+                    <TemplateCards
+                      key={doc._id} // Key should be on the direct child of the map
+                      documents={[doc]}
+                      handleDeleteTemplate={handleDeleteTemplate}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-          {/* 
+          {/*
   <div className="w-full max-w-4xl">
     <h2 className="text-2xl font-semibold mb-4 text-left">Recent Docs</h2>
     <div className="flex justify-center space-x-6">
@@ -398,9 +413,9 @@ const NeoTemplate = () => {
   </div> */}
 
           <div className='w-full max-w-6xl space-y-4'>
-           
+
             <div className='rounded-xl p-6'>
-             
+
             </div>
           </div>
         </div>

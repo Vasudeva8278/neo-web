@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import bannerImage from "../Assets/Banner.jpg";
+import { FaTrash, FaEdit, FaSave } from 'react-icons/fa';
 
 
 const api = axios.create({
@@ -81,24 +82,15 @@ const UserManage = () => {
     <div>
       
       
-      <div className="mb-4 sm:mb-6 relative">
-        <div 
-          className="bg-cover bg-center rounded-2xl overflow-hidden border-2 border-white-200 mt-6"
-          style={{ backgroundImage: `url(${bannerImage})`, height: '250px' }}
-        >
-          <div className="flex items-center justify-between p-2 sm:p-8 relative h-full bg-opacity-30">
-            {/* Arrows for banner or additional content can go here */}
-          </div>
-        </div>
-      </div>
-      <h1>User Management</h1>
+     
+      <h1 className='text-2xl font-bold text-center'>User Management</h1>
       {loading && (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto mt-4 border-2 border-gray-300 rounded-xl p-4">
           <table className="equipment-table">
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Description</th>
+                <th>Email</th>
                 <th>Role</th>
                 <th>Delete</th>
                 <th>Edit</th>
@@ -124,10 +116,9 @@ const UserManage = () => {
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Description</th>
-                <th>Role</th>
-                <th>Delete</th>
-                <th>Edit</th>
+                <th>Email</th>
+                <th >Role</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -154,17 +145,21 @@ const UserManage = () => {
                       )}
                     </td>
                     <td>
-                      <button className="delete-btn" onClick={() => handleDeleteUser(u._id)}>Delete</button>
-                    </td>
-                    <td>
+                      <button className="delete-btn mr-2" title="Delete" onClick={() => handleDeleteUser(u._id)}>
+                        <FaTrash />
+                      </button>
                       {canEdit ? (
                         editRole[u._id] !== undefined ? (
-                          <button className="save-btn" onClick={() => handleUpdateUser(u._id)} disabled={!editRole[u._id]}>Save</button>
+                          <button className="save-btn" title="Save" onClick={() => handleUpdateUser(u._id)} disabled={!editRole[u._id]}>
+                            <FaSave />
+                          </button>
                         ) : (
-                          <button className="edit-btn" onClick={() => setEditRole({ ...editRole, [u._id]: u.role })}>Edit</button>
+                          <button className="edit-btn" title="Edit" onClick={() => setEditRole({ ...editRole, [u._id]: u.role })}>
+                            <FaEdit />
+                          </button>
                         )
                       ) : (
-                        <button className="edit-btn" disabled>Edit</button>
+                        <button className="edit-btn" disabled><FaEdit /></button>
                       )}
                     </td>
                   </tr>
