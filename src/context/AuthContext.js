@@ -93,8 +93,20 @@ const AuthProvider = ({ children }) => {
     localStorage.removeItem('orgId');
   };
 
+  // Update user profile
+  const updateProfile = async (userId, profileData) => {
+    try {
+      const response = await axios.put(`/api/users/update-profile/${userId}`, profileData);
+      setUser(response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Profile update failed', error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, signup, logout, setUser, setToken }}>
+    <AuthContext.Provider value={{ user, token, login, signup, logout, setUser, setToken, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

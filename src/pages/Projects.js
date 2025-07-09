@@ -58,7 +58,7 @@ const Projects = () => {
     <div className="App">
       {/* <div className="flex text-gray-400 text-xs p-3 ml-4"> Projects</div> */}
       <div className="m-2">
-        <SearchHeader />
+      
       </div>
     
       <div className="w-full p-2 f ">

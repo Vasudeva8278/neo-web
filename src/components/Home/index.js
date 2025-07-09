@@ -21,6 +21,7 @@ import Clients from "../../pages/Clients";
 import ViewClient from "../../pages/ViewClient";
 import LandingPage from "../../pages/LandingPage.tsx";
 import UserManage from "../../pages/UserManage";
+import RoleFeatureManagement from "../RoleFeatureManagement";   
 const Home = () => {
   // State to manage visibility of Navigation component
   const [isNavigationVisible, setIsNavigationVisible] = useState(true);
@@ -70,6 +71,7 @@ const Home = () => {
             <Route path='/viewclient' element={<ViewClient />} />
             <Route path='/projects/:id' element={<NeoProjectTemplates />} />
             <Route path='/UserManage' element={<UserManage />} />
+            <Route path='/RoleFeatureManagement' element={<RoleFeatureManagement />} />
             <Route
            
               path='/viewAllHighlights'

@@ -15,7 +15,7 @@ const ProfileSettings = () => {
   const [addressError, setAddressError] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [errors, setErrors] = useState({});
-  const { user } = useContext(AuthContext);
+  const { user, token, updateProfile } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     userId: "", // Add userId for backend identification
     firstName: user && user.name ? user.name : "",
@@ -103,24 +103,29 @@ const ProfileSettings = () => {
       setAddressError(error);
       return;
     }
-    try {
-      const formDataToSend = new FormData();
 
-      // Append form data fields
-      Object.entries(formData).forEach(([key, value]) => {
-        console.log(key, " : : ", value);
-        if (key === "profilePic" && value instanceof File) {
-          console.log(key, " ** : ", value);
-          formDataToSend.append(key, value); // Append file
-        } else {
-          formDataToSend.append(key, value); // Append other data
-        }
-      });
-
-      const response = await createAndUpdateProfile(formDataToSend); // Replace with your backend API endpoint
-      if (response.status === 200 || response.status === 201) {
-        toast.success("Profile saved successfully!");
+    // Check image size if present
+    if (formData.profilePic && formData.profilePic instanceof File) {
+      if (formData.profilePic.size > 4 * 1024 * 1024) { // 4MB
+        toast.error("Profile image must be less than 4MB.");
+        return;
       }
+    }
+
+    try {
+      const dataToSend = { ...formData };
+      // If profilePic is a File, upload as base64 string
+      if (formData.profilePic && formData.profilePic instanceof File) {
+        const toBase64 = file => new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
+        });
+        dataToSend.profilePic = await toBase64(formData.profilePic);
+      }
+      await updateProfile(user.id || user._id, dataToSend, token);
+      toast.success("Profile saved successfully!");
     } catch (error) {
       console.error("Error saving profile data:", error.message);
       toast.error("Failed to save profile data. Please try again.");
@@ -130,6 +135,10 @@ const ProfileSettings = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 4 * 1024 * 1024) { // 4MB
+        toast.error("Profile image must be less than 4MB.");
+        return;
+      }
       setFormData({ ...formData, profilePic: file }); // Store the file in formData
       const reader = new FileReader();
       reader.onload = () => {

@@ -74,6 +74,10 @@ const Navigation = () => {
     navigate("/UserManage");
   };
 
+  const handleRoleFeatureManagement = () => {
+    navigate("/RoleFeatureManagement");
+  };
+
   const handleProjectsTemplates = (project) => {
     navigate(`/projects/${project._id}`, { state: { data: project } });
   };
@@ -244,6 +248,7 @@ const Navigation = () => {
               <NavItem to="/Neo" onClick={handleTemplates} icon={RiLayout4Line} label="Templates" />
               <NavItem to="/NeoDocements" onClick={handleDocuments} icon={FaFile} label="Documents" />
               <NavItem to="/UserManage" onClick={handleUserManage} icon={BsPeopleFill} label="Users" />
+              <NavItem to="/RoleFeatureManagement" onClick={handleRoleFeatureManagement} icon={FaUser} label="Roles" />
             </>
           )}
 
@@ -258,6 +263,7 @@ const Navigation = () => {
             <NavItem to="/profile" icon={FaUser} label="Profile" />
           )}
         </ul>
+        
       </nav>
 
       {/* Logout Section at the bottom */}

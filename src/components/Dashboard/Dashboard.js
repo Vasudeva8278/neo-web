@@ -32,11 +32,14 @@ const Dashboard = () => {
 
   return (
     <div>
-      <Neo />
+
+      <Neo  />
+
+      
       <h1 className='text-2xl font-bold mx-8'>Projects</h1>
       {loading && <div>Loading...</div>}
       {error && <div style={{ color: 'red' }}>{error}</div>}
-      <div className="my-8 mx-8">
+      <div className="my-8 mx-8 w-full">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {projects.map((docObj) => (
             <div key={docObj._id} className="bg-white border border-gray-200 rounded-2xl shadow flex flex-col justify-between w-full h-[260px] p-4 relative transition hover:shadow-lg">

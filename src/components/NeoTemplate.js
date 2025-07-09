@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { MdKeyboardArrowDown, MdArrowDropDown } from "react-icons/md";
 import { RiMenuFill, RiLayout4Line } from "react-icons/ri";
 import { IoNotifications } from "react-icons/io5";
@@ -28,8 +28,12 @@ import {
   getDocumentsWithTemplateNames,
 } from "../services/documentApi";
 import SearchHeader from "./SearchHeader";
+import { Sparkles, FileText } from 'lucide-react';
+import DesignTemplate from './DesignTemplate';
+import NeoModal from './NeoModal';
+import { AuthContext } from '../context/AuthContext';
 
-const NeoTemplate = () => {
+const NeoTemplate = ({ projectId }) => {
   const navigate = useNavigate();
   const [documents, setDocuments] = useState([]);
   const [recentDocuments, setRecentDocuments] = useState([]);
@@ -41,6 +45,21 @@ const NeoTemplate = () => {
   const contentRef = useRef(null);
   const [conversionStatus, setConversionStatus] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [displayPage, setDisplayPage] = useState("");
+  const [selectedProject, setSelectedProject] = useState(projectId || '');
+  const { user } = useContext(AuthContext);
+
+  const openModal = (page) => {
+    setDisplayPage(page);
+    setIsModalOpen(true);
+  };
+
+  useEffect(() => {
+    if (projectId) {
+      setSelectedProject(projectId);
+    }
+  }, [projectId]);
 
   const handleSelectDocument = (docId) => {
     navigate(`/document/${docId}`);
@@ -277,7 +296,7 @@ const NeoTemplate = () => {
   };
 
   return (
-    <div className='flex w-[100%] '>
+    <div className='flex w-[100%]'>
       <div className='hidden flex flex-col items-start border-r border-gray-200'>
         <div className='flex items-center w-64 h-20 border-b border-gray-300'>
           <img
@@ -313,8 +332,8 @@ const NeoTemplate = () => {
       </div>
 
       <div className='flex flex-col w-full m-2'>
-
-
+     
+        
         <div
           className='bg-gradient-to-r from-purple-500 to-blue-500 h-52 rounded-lg mt-4 ml-4 p-10 hidden'
           style={{ height: "220px" }}
@@ -333,7 +352,7 @@ const NeoTemplate = () => {
           <div className='flex mt-4 '>
             <div className='flex flex-col items-center mb-4 w-full '>
               <div
-                className={`flex flex-col items-center justify-center w-52 h-24 border-gray-500    shadow-lg rounded-lg text-white mx-4 ${
+                className={`flex flex-col items-center justify-center w-52 h-24 border-gray-500     shadow-lg rounded-lg text-white mx-4 ${
                   isDragging ? "border-green-500 bg-blue-100" : "border-white"
                 }`}
                 onDragOver={handleDragOver}
@@ -375,35 +394,53 @@ const NeoTemplate = () => {
             </div>
           </div>
         </div>
-        <div className='flex flex-col p-4 space-y-8'>
-          <div className='w-full'>
-            <h2 className='text-2xl font-semibold mb-4 text-left'>
-                Templates
-            </h2>
-            <div className="w-full px-1">
-              <div className="bg-red-500 rounded-2xl p-4 sm:p-6 md:p-8 lg:p-10"> {/* Adjusted padding for responsiveness */}
-                <div
-                  className="grid w-full mt-10"
-                  style={{
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', /* Reduced min card width */
-                    gap: '1rem', /* Reduced gap between cards */
-                    justifyItems: 'center', /* Center cards within their grid cells */
-                  }}
-                >
-                  {documents.map((doc) => (
-                    // Directly place TemplateCards component without an extra wrapping div
-                    // This is key to ensuring the grid handles layout without conflicting margins
-                    <TemplateCards
-                      key={doc._id} // Key should be on the direct child of the map
-                      documents={[doc]}
-                      handleDeleteTemplate={handleDeleteTemplate}
-                    />
-                  ))}
-                </div>
+        <div className='flex flex-col p-4 space-y-8 '>
+          <div className="w-full p-4 md:p-8 rounded-2xl ">
+            <div className="flex flex-col sm:flex-row items-center gap-2 justify-between mb-4">
+            <h2 className='text-2xl font-semibold mb-4 text-left'>Templates</h2>
+            <button
+                onClick={() => openModal('designTemplates')}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors shadow-md text-sm"
+              >
+                <FileText className="w-5 h-5" />
+                Design Template
+              </button>
               </div>
+            <div className="flex flex-col sm:flex-row items-center gap-2 justify-end mb-4">
+              
+             
+            </div>
+            <NeoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+              <React.Suspense fallback={<div className="p-4">Loading...</div>}>
+                {(() => {
+                  try {
+                    if (displayPage === 'designTemplates') {
+                      return <DesignTemplate onClose={() => setIsModalOpen(false)} value={selectedProject} hasProject={false} />;
+                    }
+                    // Add your generateDocs modal here if needed
+                    return <div className="p-4 text-gray-500">No content selected.</div>;
+                  } catch (err) {
+                    console.error('Error rendering modal content:', err);
+                    return <div className="p-4 text-red-500">An error occurred while loading the modal content.</div>;
+                  }
+                })()}
+              </React.Suspense>
+            </NeoModal>
+            {loading && <div>Loading...</div>}
+            <div
+              className="grid w-full gap-x-8 gap-y-12"
+              style={{
+                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              }}
+            >
+              <TemplateCards
+                documents={documents}
+                handleDeleteTemplate={handleDeleteTemplate}
+                template={false}
+              />
             </div>
           </div>
-          {/*
+          {/* 
   <div className="w-full max-w-4xl">
     <h2 className="text-2xl font-semibold mb-4 text-left">Recent Docs</h2>
     <div className="flex justify-center space-x-6">
@@ -413,9 +450,9 @@ const NeoTemplate = () => {
   </div> */}
 
           <div className='w-full max-w-6xl space-y-4'>
-
+           
             <div className='rounded-xl p-6'>
-
+             
             </div>
           </div>
         </div>

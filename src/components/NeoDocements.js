@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 import CanvasThumbnails from "./CanvasThumbnails";
 import photo from "../Assets/photo.png";
 import * as docx from "docx-preview";
-import TemplateCards from "./Template/TemplateCards";
+import TemplateCards from "./Template/TemplateCards"; // Assuming this is TemplateCards.jsx
 import axios from "axios";
 import {
   createNeoTemplate,
@@ -29,6 +29,9 @@ import {
 } from "../services/documentApi";
 import SearchHeader from "./SearchHeader";
 import { AuthContext } from "../context/AuthContext";
+import { Sparkles } from 'lucide-react';
+import GenerateDocument from './GenerateDocument';
+import NeoModal from './NeoModal';
 
 const NeoDocements = () => {
   const { user } = useContext(AuthContext);
@@ -47,6 +50,13 @@ const NeoDocements = () => {
   const EXPERT_ROLE_ID = "68621581db15fbb9bbd2f836";
   const isExecutive = user && user.role === EXECUTIVE_ROLE_ID;
   const isExpert = user && user.role === EXPERT_ROLE_ID;
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [displayPage, setDisplayPage] = useState("");
+
+  const openModal = (page) => {
+    setDisplayPage(page);
+    setIsModalOpen(true);
+  };
 
   const handleSelectDocument = (docId) => {
     navigate(`/document/${docId}`);
@@ -289,12 +299,12 @@ const NeoDocements = () => {
         <div className='w-full max-w-6xl space-y-4 mx-auto'>
           <h2 className='text-2xl font-semibold mb-4 text-left'>Documents</h2>
           <div className='rounded-xl p-6'>
+            {/* The TemplateCards component itself defines the grid and spacing */}
             <TemplateCards
               documents={docTemplates}
               template={true}
               handleDeleteTemplate={handleDeleteDocument}
               handleDownload={handleDocumentDownload}
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
             />
           </div>
         </div>
@@ -302,7 +312,7 @@ const NeoDocements = () => {
     );
   }
   return (
-    <div className='flex w-[100%]'>
+    <div className='flex w-[100%] '>
       <div className='hidden flex flex-col items-start border-r border-gray-200'>
         <div className='flex items-center w-64 h-20 border-b border-gray-300'>
           <img
@@ -338,8 +348,8 @@ const NeoDocements = () => {
       </div>
 
       <div className='flex flex-col w-full m-2'>
-  
-        <SearchHeader />
+
+
         <div
           className='bg-gradient-to-r from-purple-500 to-blue-500 h-52 rounded-lg mt-4 ml-4 p-10 hidden'
           style={{ height: "220px" }}
@@ -358,7 +368,7 @@ const NeoDocements = () => {
           <div className='flex mt-4 '>
             <div className='flex flex-col items-center mb-4 w-full '>
               <div
-                className={`flex flex-col items-center justify-center w-52 h-24 border-gray-500     shadow-lg rounded-lg text-white mx-4 ${
+                className={`flex flex-col items-center justify-center w-52 h-24 border-gray-500    shadow-lg rounded-lg text-white mx-4 ${
                   isDragging ? "border-green-500 bg-blue-100" : "border-white"
                 }`}
                 onDragOver={handleDragOver}
@@ -404,10 +414,11 @@ const NeoDocements = () => {
           <div className='w-full max-w-5xl'>
 
             <div className='flex justify-center'>
-            
+
             </div>
+            
           </div>
-          {/* 
+          {/*
   <div className="w-full max-w-4xl">
     <h2 className="text-2xl font-semibold mb-4 text-left">Recent Docs</h2>
     <div className="flex justify-center space-x-6">
@@ -416,25 +427,47 @@ const NeoDocements = () => {
     </div>
   </div> */}
 
-          <div className='w-full max-w-6xl space-y-4'>
-            <h2 className='text-2xl font-semibold mb-4 text-left'>
-              Documents 
-            </h2>
-            <div className='rounded-xl p-6'>
+         
+      </div>
+      <div className='w-full space-y-4 '>
+            <div className="flex flex-col sm:flex-row items-center gap-2 justify-between mb-4">
+              <h2 className='text-2xl font-semibold mb-4 text-left'>Documents</h2>
+              <button
+                onClick={() => openModal('generateDocs')}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors shadow-md text-sm"
+              >
+                <Sparkles className="w-5 h-5" />
+                Generate Documents
+              </button>
+            </div>
+            <NeoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+              <React.Suspense fallback={<div className="p-4">Loading...</div>}>
+                {(() => {
+                  try {
+                    if (displayPage === 'generateDocs') {
+                      return <GenerateDocument onClose={() => setIsModalOpen(false)} value={''} hasProject={false} />;
+                    }
+                    return <div className="p-4 text-gray-500">No content selected.</div>;
+                  } catch (err) {
+                    console.error('Error rendering modal content:', err);
+                    return <div className="p-4 text-red-500">An error occurred while loading the modal content.</div>;
+                  }
+                })()}
+              </React.Suspense>
+            </NeoModal>
+            <div className='rounded-xl p-6 w-full'>
+              {/* The TemplateCards component itself defines the grid and spacing */}
               <TemplateCards
                 documents={docTemplates}
-                template={true}
+                template={false}
                 handleDeleteTemplate={handleDeleteDocument}
                 handleDownload={handleDocumentDownload}
-                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
               />
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 };
 
 export default NeoDocements;
-

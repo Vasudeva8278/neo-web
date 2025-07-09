@@ -8,6 +8,7 @@ import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import bannerImage from "../Assets/Banner.jpg";
 import { FaTrash, FaEdit, FaSave } from 'react-icons/fa';
+import { useCallback } from 'react';
 
 
 const api = axios.create({
@@ -23,12 +24,48 @@ const roleOptions = [
   { value: SUPER_ADMIN_ROLE_ID, label: 'Admin' }
 ];
 
+const FEATURE_LIST = ["Projects", "Clients", "Templates", "Documents", "Users"];
+
 const UserManage = () => {
   const { user } = useContext(AuthContext);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editRole, setEditRole] = useState({});
+  const [roles, setRoles] = useState([]);
+  const [roleLoading, setRoleLoading] = useState(true);
+
+  // Fetch roles and their features
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const res = await axios.get('http://localhost:7000/api/roles/');
+        setRoles(res.data);
+      } catch (error) {
+        toast.error('Failed to fetch roles');
+      } finally {
+        setRoleLoading(false);
+      }
+    };
+    fetchRoles();
+  }, []);
+
+  // Handle feature toggle
+  const handleFeatureToggle = useCallback(async (roleId, feature) => {
+    const role = roles.find(r => r._id === roleId);
+    if (!role) return;
+    const hasFeature = role.features && role.features.includes(feature);
+    const updatedFeatures = hasFeature
+      ? role.features.filter(f => f !== feature)
+      : [...(role.features || []), feature];
+    try {
+      await axios.put(`http://localhost:7000/api/roles/${roleId}`, { features: updatedFeatures });
+      setRoles(roles.map(r => r._id === roleId ? { ...r, features: updatedFeatures } : r));
+      toast.success('Role features updated!');
+    } catch (error) {
+      toast.error('Failed to update role features');
+    }
+  }, [roles]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -83,7 +120,7 @@ const UserManage = () => {
       
       
      
-      <h1 className='text-2xl font-bold text-center'>User Management</h1>
+      <h1 className='text-2xl font-bold'>User Management</h1>
       {loading && (
         <div className="overflow-x-auto mt-4 border-2 border-gray-300 rounded-xl p-4">
           <table className="equipment-table">
@@ -168,6 +205,7 @@ const UserManage = () => {
             </tbody>
           </table>
         </div>
+       
    
     </div>
     </>
