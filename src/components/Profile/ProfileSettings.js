@@ -9,15 +9,17 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import photo from '../../Assets/general_profile.png';
 import { AuthContext } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const ProfileSettings = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [addressError, setAddressError] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [errors, setErrors] = useState({});
-  const { user, token, updateProfile } = useContext(AuthContext);
-  const [formData, setFormData] = useState({
-    userId: "", // Add userId for backend identification
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const initialFormData = {
+    userId: "",
     firstName: user && user.name ? user.name : "",
     lastName: "",
     email: user && user.email ? user.email : "",
@@ -25,7 +27,8 @@ const ProfileSettings = () => {
     gender: "",
     dateOfBirth: "",
     address: "",
-  });
+  };
+  const [formData, setFormData] = useState(initialFormData);
 
   // Fetch initial profile data on component mount
   useEffect(() => {
@@ -50,6 +53,7 @@ const ProfileSettings = () => {
     };
     fetchProfileData();
   }, []);
+
   const validateForm = () => {
     const newErrors = {};
     if (!formData.firstName.trim())
@@ -103,29 +107,24 @@ const ProfileSettings = () => {
       setAddressError(error);
       return;
     }
-
-    // Check image size if present
-    if (formData.profilePic && formData.profilePic instanceof File) {
-      if (formData.profilePic.size > 4 * 1024 * 1024) { // 4MB
-        toast.error("Profile image must be less than 4MB.");
-        return;
-      }
-    }
-
     try {
-      const dataToSend = { ...formData };
-      // If profilePic is a File, upload as base64 string
-      if (formData.profilePic && formData.profilePic instanceof File) {
-        const toBase64 = file => new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = error => reject(error);
-        });
-        dataToSend.profilePic = await toBase64(formData.profilePic);
+      const formDataToSend = new FormData();
+
+      // Append form data fields
+      Object.entries(formData).forEach(([key, value]) => {
+        console.log(key, " : : ", value);
+        if (key === "profilePic" && value instanceof File) {
+          console.log(key, " ** : ", value);
+          formDataToSend.append(key, value); // Append file
+        } else {
+          formDataToSend.append(key, value); // Append other data
+        }
+      });
+
+      const response = await createAndUpdateProfile(formDataToSend); // Replace with your backend API endpoint
+      if (response.status === 200 || response.status === 201) {
+        toast.success("Profile saved successfully!");
       }
-      await updateProfile(user.id || user._id, dataToSend, token);
-      toast.success("Profile saved successfully!");
     } catch (error) {
       console.error("Error saving profile data:", error.message);
       toast.error("Failed to save profile data. Please try again.");
@@ -135,10 +134,6 @@ const ProfileSettings = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 4 * 1024 * 1024) { // 4MB
-        toast.error("Profile image must be less than 4MB.");
-        return;
-      }
       setFormData({ ...formData, profilePic: file }); // Store the file in formData
       const reader = new FileReader();
       reader.onload = () => {
@@ -152,13 +147,34 @@ const ProfileSettings = () => {
     document.getElementById("imageUpload").click();
   };
 
+  // Handle Cancel: clear all fields
+  const handleCancel = () => {
+    setFormData(initialFormData);
+    setImagePreview(null);
+    setErrors({});
+    setAddressError("");
+  };
+
+  // Handle Close: navigate to Documents page
+  const handleClose = () => {
+    navigate("/NeoDocements");
+  };
+
   return (
-    <div className='flex flex-col gap-4 bg-white shadow rounded-lg '>
+    <div className='flex flex-col gap-4 bg-white shadow rounded-lg relative'>
+      {/* Top right close icon */}
+      <button
+        className='absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl font-bold focus:outline-none'
+        onClick={handleClose}
+        aria-label='Close'
+      >
+        &times;
+      </button>
       <div className='flex justify-between items-center bg-blue-100  p-4 border-red-500'>
         <h2 className='text-xl font-bold text-gray-700'>Profile Settings</h2>
-        <div className='flex gap-4'>
+        <div className='flex gap-6'>
           <button
-            className='text-sm text-red-600 font-semibold'
+            className='text-sm text-red-600 font-semibold mr-10'
             onClick={handleChangePwd}
           >
             Change Password
@@ -350,12 +366,28 @@ const ProfileSettings = () => {
               </div>
             </div>
           </div>
-          <button
-            type='submit'
-            className='bg-blue-500 text-white px-6 py-2 rounded-lg font-medium m-10 justify-center'
-          >
-            Save Changes
-          </button>
+          <div className='flex gap-4 mt-8'>
+            <button
+              type='submit'
+              className='bg-blue-500 text-white px-6 py-2 rounded-lg font-medium justify-center'
+            >
+              Save Changes
+            </button>
+            <button
+              type='button'
+              className='bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-medium hover:bg-gray-300'
+              onClick={handleCancel}
+            >
+              Cancel
+            </button>
+            <button
+              type='button'
+              className='bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-medium hover:bg-gray-300'
+              onClick={handleClose}
+            >
+              Close
+            </button>
+          </div>
         </form>
         <ToastContainer />
         <NeoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
