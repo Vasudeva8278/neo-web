@@ -197,6 +197,18 @@ const DesignTemplate = ({ onClose, value, hasProject }) => {
     }
   };
 
+  const LoadingSVG = () => (
+    <div className="flex flex-col items-center justify-center">
+      <svg width="200" height="100" viewBox="0 0 400 200">
+        <text x="100" y="80" fontSize="40" fill="#7dd3fc">Loading</text>
+        <rect x="60" y="100" rx="20" width="280" height="40" fill="#38bdf8" opacity="0.3"/>
+        <rect x="60" y="100" rx="20" width="140" height="40" fill="#38bdf8">
+          <animate attributeName="width" values="40;280;40" dur="1.5s" repeatCount="indefinite" />
+        </rect>
+      </svg>
+    </div>
+  );
+
   return (
     <>
       <div className="p-6">
@@ -305,11 +317,20 @@ const DesignTemplate = ({ onClose, value, hasProject }) => {
           }}
           ref={contentRef}
         ></div>
-        {loading && (
-          <div className="fixed inset-0 flex items-center justify-center bg-gray-100 bg-opacity-75 z-50">
-            <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
+        <div className="relative">
+          <div className={uploading ? "filter blur-sm pointer-events-none" : ""}>
+            {loading && (
+              <div className="fixed inset-0 flex items-center justify-center bg-gray-100 bg-opacity-75 z-50">
+                <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
+              </div>
+            )}
           </div>
-        )}
+          {uploading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-60 z-50">
+              <LoadingSVG />
+            </div>
+          )}
+        </div>
 
         <div className="bg-gray-100 p-4 rounded-lg mb-4">
           <p className="text-gray-600">

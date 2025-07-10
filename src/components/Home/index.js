@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import axios from "axios";
+import { AuthContext } from "../../context/AuthContext"; // adjust path if needed
 import { Routes, Route } from "react-router-dom";
 import Navigation from "../Navigation";
 import ProfileSettings from "../Profile/ProfileSettings";
@@ -23,20 +25,45 @@ import LandingPage from "../../pages/LandingPage.tsx";
 import UserManage from "../../pages/UserManage";
 import RoleFeatureManagement from "../RoleFeatureManagement";   
 const Home = () => {
-  // State to manage visibility of Navigation component
   const [isNavigationVisible, setIsNavigationVisible] = useState(true);
+  const [roleFeatures, setRoleFeatures] = useState([]);
+  const [featuresLoading, setFeaturesLoading] = useState(true);
 
-  // Function to toggle Navigation visibility
+  // Get user from context or localStorage
+  const { user } = useContext(AuthContext);
+  const roleId = user?.role || localStorage.getItem("role");
+
+  useEffect(() => {
+    const fetchRoleFeatures = async () => {
+      if (roleId) {
+        try {
+          const API_URL = process.env.REACT_APP_API_URL || "http://localhost:7000";
+          const res = await axios.get(`${API_URL}/api/roles/${roleId}`);
+          setRoleFeatures(res.data.features || []);
+        } catch (error) {
+          setRoleFeatures([]);
+        } finally {
+          setFeaturesLoading(false);
+        }
+      } else {
+        setRoleFeatures([]);
+        setFeaturesLoading(false);
+      }
+    };
+    fetchRoleFeatures();
+  }, [roleId]);
+
   const toggleNavigation = () => {
     setIsNavigationVisible((prevState) => !prevState);
   };
 
+  if (featuresLoading) return null; // or a spinner
+
   return (
     <div className='flex flex-col h-screen'>
       <div>
-      <ProfileHeader />
+        <ProfileHeader />
       </div>
-     
       <div className='flex flex-1'>
         {isNavigationVisible && (
           <div className='w-3 sm:w-10 md:w-20'>
@@ -45,38 +72,63 @@ const Home = () => {
         )}
         <div className='flex-1 p-2 overflow-auto bg-gray-50 ml-10 sm:ml-0 md:ml-0 rounded-3xl mt-16 border-2 border-gray-200'>
           <Routes>
-            {localStorage.getItem('role') === 'admin' && (
+            {/* Example: Only show UserManage if user has 'Users' feature */}
+            {roleFeatures.includes('Users') && (
               <Route path='/user-manage' element={<UserManage />} />
             )}
-        
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/' element={<LandingPage />} />
-            <Route path='/Neo' element={<NeoTemplate />} />
-            <Route path='/NeoDocements' element={<NeoDocements />} />
-            <Route path='/document/:id' element={<DocxToTextConverter />} />
-            <Route path='/docview/:id' element={<DocumentView />} />
-            <Route path='/docviewall/:id' element={<DocumentContainer />} />
-            <Route path='/listView' element={<ListofDocuments />} />
-            <Route
-              path='/export/:id'
-              element={
-                <div>
-                  <ExportComponent />
-                </div>
-              }
-            />
-            <Route path='/projects' element={<Projects />} />
-            <Route path='/clients' element={<Clients />} />
+            {roleFeatures.includes('Templates') && (
+              <Route path='/Neo' element={<NeoTemplate />} />
+            )}
+            {roleFeatures.includes('Documents') && (
+              <Route path='/NeoDocements' element={<NeoDocements />} />
+            )}
+            {roleFeatures.includes('Templates') && (
+              <Route path='/document/:id' element={<DocxToTextConverter />} />
+            )}
+            {roleFeatures.includes('Documents') && (
+              <Route path='/docview/:id' element={<DocumentView />} />
+            )}
+            {roleFeatures.includes('Documents') && (
+              <Route path='/docviewall/:id' element={<DocumentContainer />} />
+            )}
+            {roleFeatures.includes('Documents') && (
+              <Route path='/listView' element={<ListofDocuments />} />
+            )}
+            {roleFeatures.includes('Documents') && (
+              <Route
+                path='/export/:id'
+                element={
+                  <div>
+                    <ExportComponent />
+                  </div>
+                }
+              />
+            )}
+            {roleFeatures.includes('projects') && (
+              <Route path='/projects' element={<Projects />} />
+            )}
+            {roleFeatures.includes('Clients') && (
+              <Route path='/clients' element={<Clients />} />
+            )}
             <Route path='/profile' element={<ProfileSettings />} />
-            <Route path='/viewclient' element={<ViewClient />} />
-            <Route path='/projects/:id' element={<NeoProjectTemplates />} />
-            <Route path='/UserManage' element={<UserManage />} />
+            {roleFeatures.includes('Clients') && (
+              <Route path='/viewclient' element={<ViewClient />} />
+            )}
+            {roleFeatures.includes('projects') && (
+              <Route path='/projects/:id' element={<NeoProjectTemplates />} />
+            )}
+            {roleFeatures.includes('Users') && (
+              <Route path='/UserManage' element={<UserManage />} />
+            )}
             <Route path='/RoleFeatureManagement' element={<RoleFeatureManagement />} />
-            <Route
-           
-              path='/viewAllHighlights'
-              element={<ViewTemplatesHighlights />}
-            />
+            {roleFeatures.includes('Templates') && (
+              <Route
+                path='/viewAllHighlights'
+                element={<ViewTemplatesHighlights />}
+              />
+            )}
           </Routes>
         </div>
       </div>

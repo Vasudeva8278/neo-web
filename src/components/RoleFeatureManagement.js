@@ -3,7 +3,7 @@ import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const FEATURE_LIST = ["Projects", "Clients", "Templates", "Documents", "Users"];
+const FEATURE_LIST = ["projects", "Clients", "Templates", "Documents", "Users"];
 
 const RoleFeatureManagement = () => {
   const [roles, setRoles] = useState([]);
@@ -50,7 +50,7 @@ const RoleFeatureManagement = () => {
       setRoles(roles.map(r => r._id === roleId ? { ...r, features: editedFeatures } : r));
       toast.success('Role features updated!');
       setEditRoleId(null);
-      setEditedFeatures({});
+      setEditedFeatures([]);
     } catch (error) {
       toast.error('Failed to update role features');
     }
@@ -76,7 +76,7 @@ const RoleFeatureManagement = () => {
                       disabled={editRoleId !== role._id}
                       onChange={() => handleFeatureChange(feature)}
                     />
-                    <span>{feature}</span>
+                    <span>{feature.charAt(0).toUpperCase() + feature.slice(1)}</span>
                   </label>
                 ))}
               </div>

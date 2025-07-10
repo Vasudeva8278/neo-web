@@ -23,6 +23,7 @@ import { HiOutlineUserGroup } from "react-icons/hi";
 import logo from '../Assets/logo-neo.png';
 import NeoModal from "./NeoModal";
 import NeoProject from "../pages/NeoProject";
+import axios from "axios";
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -31,6 +32,8 @@ const Navigation = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showName, setShowName] = useState(false);
+  const [roleFeatures, setRoleFeatures] = useState(null);
+  const [featuresLoading, setFeaturesLoading] = useState(true);
 
   const EXECUTIVE_ROLE_ID = "68621597db15fbb9bbd2f838";
   const EXPERT_ROLE_ID = "68621581db15fbb9bbd2f836";
@@ -38,6 +41,27 @@ const Navigation = () => {
   const isExecutive = user && user.role === EXECUTIVE_ROLE_ID;
   const isExpert = user && user.role === EXPERT_ROLE_ID;
   const isAdmin = user && user.role === ADMIN_ROLE_ID;
+
+  // Fetch role features for the logged-in user
+  useEffect(() => {
+    const fetchRoleFeatures = async () => {
+      if (user && user.role) {
+        try {
+          const API_URL = process.env.REACT_APP_API_URL || "http://localhost:7000";
+          const res = await axios.get(`${API_URL}/api/roles/${user.role}`);
+          setRoleFeatures(res.data.features || []);
+        } catch (error) {
+          setRoleFeatures([]);
+        } finally {
+          setFeaturesLoading(false);
+        }
+      } else {
+        setRoleFeatures([]);
+        setFeaturesLoading(false);
+      }
+    };
+    fetchRoleFeatures();
+  }, [user]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -137,10 +161,12 @@ const Navigation = () => {
   };
 
   // Helper function to render navigation items
-  const NavItem = ({ to, onClick, icon: Icon, label, projectSpecific = false, projectId = null }) => {
+  const NavItem = ({ to, onClick, icon: Icon, label, projectSpecific = false, projectId = null, featureKey }) => {
     const active = projectSpecific
       ? isProjectActive(projectId)
       : isActive(to) || (to === "/projects" && location.pathname.startsWith("/projects/") && !projectId);
+    // Only render if featureKey is not set or is present in roleFeatures
+    if (featureKey && (!roleFeatures || !roleFeatures.includes(featureKey))) return null;
 
     return (
       <li className="w-full flex justify-center">
@@ -165,6 +191,10 @@ const Navigation = () => {
     );
   };
 
+  if (featuresLoading) {
+    return null; // or a loading spinner if you prefer
+  }
+
   return (
     <div
       className={`
@@ -172,11 +202,12 @@ const Navigation = () => {
         border-r border-white
         flex flex-col
         h-screen
-        overflow-y-hidden
+        overflow-y-auto overflow-x-hidden
         bg-white
         text-white
         transition-all duration-300
         w-20
+        no-scrollbar
       `}
     >
       {/* Logo Section */}
@@ -199,56 +230,28 @@ const Navigation = () => {
         <ul className={`w-full flex flex-col items-center ${isMobile ? 'space-y-1' : 'space-y-2'}`}>
           {isAdmin ? (
             <>
-              <NavItem to="/dashboard" icon={GoHome} label="Home" />
-              <li className="w-full flex flex-col items-center">
-                <div
-                  onClick={handleProjects}
-                  className={`
-                    flex flex-col items-center p-2 rounded-lg cursor-pointer w-full
-                    hover:bg-blue-100 transition duration-200
-                    ${isActive("/projects") && !location.pathname.startsWith("/projects/") ? "shadow-md shadow-blue-300 bg-blue-50" : ""}
-                  `}
-                >
-                  <FaRegFolderOpen className={`w-5 h-5 mb-1 ${isActive("/projects") && !location.pathname.startsWith("/projects/") ? "text-blue-600" : "text-gray-700"}`} />
-                  <span className={`text-xs font-semibold text-center ${isActive("/projects") && !location.pathname.startsWith("/projects/") ? "text-blue-600" : "text-gray-700"}`}>
-                    Projects
-                  </span>
-                </div>
-              </li>
-              <NavItem to="/clients" onClick={handleClients} icon={HiOutlineUserGroup} label="Clients" />
-              <NavItem to="/Neo" onClick={handleTemplates} icon={RiLayout4Line} label="Templates" />
-              <NavItem to="/NeoDocements" onClick={handleDocuments} icon={FaFile} label="Documents" />
+              <NavItem to="/dashboard" icon={GoHome} label="Home" featureKey={null} />
+              <NavItem to="/projects" onClick={handleProjects} icon={FaRegFolderOpen} label="Projects" featureKey="projects" />
+              <NavItem to="/clients" onClick={handleClients} icon={HiOutlineUserGroup} label="Clients" featureKey="Clients" />
+              <NavItem to="/Neo" onClick={handleTemplates} icon={RiLayout4Line} label="Templates" featureKey="Templates" />
+              <NavItem to="/NeoDocements" onClick={handleDocuments} icon={FaFile} label="Documents" featureKey="Documents" />
             </>
           ) : isExecutive ? (
-            <NavItem to="/NeoDocements" onClick={handleDocuments} icon={FaFile} label="Documents" />
+            <NavItem to="/NeoDocements" onClick={handleDocuments} icon={FaFile} label="Documents" featureKey="Documents" />
           ) : isExpert ? (
             <>
-              <NavItem to="/Neo" onClick={handleTemplates} icon={RiLayout4Line} label="Templates" />
-              <NavItem to="/NeoDocements" onClick={handleDocuments} icon={FaFile} label="Documents" />
+              <NavItem to="/Neo" onClick={handleTemplates} icon={RiLayout4Line} label="Templates" featureKey="Templates" />
+              <NavItem to="/NeoDocements" onClick={handleDocuments} icon={FaFile} label="Documents" featureKey="Documents" />
             </>
           ) : (
             <>
-              <NavItem to="/dashboard" icon={GoHome} label="Home" />
-              <li className="w-full flex flex-col items-center">
-                <div
-                  onClick={handleProjects}
-                  className={`
-                    flex flex-col items-center p-2 rounded-lg cursor-pointer w-full
-                    hover:bg-blue-100 transition duration-200
-                    ${isActive("/projects") && !location.pathname.startsWith("/projects/") ? "shadow-md shadow-blue-300 bg-blue-50" : ""}
-                  `}
-                >
-                  <FaRegFolderOpen className={`w-5 h-5 mb-1 ${isActive("/projects") && !location.pathname.startsWith("/projects/") ? "text-blue-600" : "text-gray-700"}`} />
-                  <span className={`text-xs font-semibold text-center ${isActive("/projects") && !location.pathname.startsWith("/projects/") ? "text-blue-600" : "text-gray-700"}`}>
-                    Projects
-                  </span>
-                </div>
-              </li>
-              <NavItem to="/clients" onClick={handleClients} icon={HiOutlineUserGroup} label="Clients" />
-              <NavItem to="/Neo" onClick={handleTemplates} icon={RiLayout4Line} label="Templates" />
-              <NavItem to="/NeoDocements" onClick={handleDocuments} icon={FaFile} label="Documents" />
-              <NavItem to="/UserManage" onClick={handleUserManage} icon={BsPeopleFill} label="Users" />
-              <NavItem to="/RoleFeatureManagement" onClick={handleRoleFeatureManagement} icon={FaUser} label="Roles" />
+              <NavItem to="/dashboard" icon={GoHome} label="Home" featureKey={null} />
+              <NavItem to="/projects" onClick={handleProjects} icon={FaRegFolderOpen} label="Projects" featureKey="projects" />
+              <NavItem to="/clients" onClick={handleClients} icon={HiOutlineUserGroup} label="Clients" featureKey="Clients" />
+              <NavItem to="/Neo" onClick={handleTemplates} icon={RiLayout4Line} label="Templates" featureKey="Templates" />
+              <NavItem to="/NeoDocements" onClick={handleDocuments} icon={FaFile} label="Documents" featureKey="Documents" />
+              <NavItem to="/UserManage" onClick={handleUserManage} icon={BsPeopleFill} label="Users" featureKey="Users" />
+              <NavItem to="/RoleFeatureManagement" onClick={handleRoleFeatureManagement} icon={FaUser} label="Roles" featureKey={null} />
             </>
           )}
 
