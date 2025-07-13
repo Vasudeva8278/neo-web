@@ -47,6 +47,71 @@ const NeoProjectTemplates = () => {
   const location = useLocation();
   const projectData = location.state?.data;
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const fetchDocuments = async () => {
+    if (!projectData?._id) return;
+
+    try {
+      const response = await getHomePageDocuments(projectData._id);
+      const data = response;
+
+      setDocTemplates(data);
+    } catch (error) {
+      setError("Failed to fetch documents");
+      console.error("Failed to fetch documents", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTemplates = async () => {
+    if (!projectData?._id) return;
+
+    try {
+      const response = await getHomePageTemplates(projectData._id);
+      const data = response;
+      console.log(data);
+      setDocuments(data);
+      const sortedData = data.sort((a, b) => {
+        if (!a.updatedTime) return 1;
+        if (!b.updatedTime) return -1;
+        return new Date(b.updatedTime) - new Date(a.updatedTime);
+      });
+      setRecentDocuments(sortedData);
+    } catch (error) {
+      setError("Failed to fetch documents");
+      console.error("Failed to fetch documents", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Move useEffect before conditional return to comply with Rules of Hooks
+  useEffect(() => {
+    if (projectData) {
+      fetchTemplates();
+      fetchDocuments();
+    }
+  }, [projectData]);
+
+  // Early return if projectData is not available
+  if (!projectData) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Project Not Found</h2>
+          <p className="text-gray-600 mb-4">No project data available. Please navigate from the projects page.</p>
+          <button
+            onClick={() => navigate('/projects')}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Go to Projects
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   /*
   const handleSelectDocument = (docId) => {
     navigate(`/document/${docId}?projectId=${projectData._id}`);
@@ -68,12 +133,12 @@ const NeoProjectTemplates = () => {
     const handleDragEnter = (e) => {
     e.preventDefault();
     setIsDragging(true);
-  }; 
+  };
 
      const handleDragLeave = (e) => {
     e.preventDefault();
     setIsDragging(false);
-  }; 
+  };
 
     const handleDrop = (e) => {
     e.preventDefault();
@@ -83,14 +148,14 @@ const NeoProjectTemplates = () => {
       const file = files[0];
       onGetFile(file);
     }
-  }; 
+  };
 
    const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       onGetFile(file);
     }
-  }; 
+  };
 
     const onGetFile = async (file) => {
     setFile(file);
@@ -178,44 +243,9 @@ const NeoProjectTemplates = () => {
     }
   }; */
 
-  useEffect(() => {
-    fetchTemplates();
-    fetchDocuments();
-  }, [projectData]);
-
-  const fetchDocuments = async () => {
-    try {
-      const response = await getHomePageDocuments(projectData._id);
-      const data = response;
-
-      setDocTemplates(data);
-    } catch (error) {
-      setError("Failed to fetch documents");
-      console.error("Failed to fetch documents", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const fetchTemplates = async () => {
-    try {
-      const response = await getHomePageTemplates(projectData._id);
-      const data = response;
-      console.log(data);
-      setDocuments(data);
-      const sortedData = data.sort((a, b) => {
-        if (!a.updatedTime) return 1;
-        if (!b.updatedTime) return -1;
-        return new Date(b.updatedTime) - new Date(a.updatedTime);
-      });
-      setRecentDocuments(sortedData);
-    } catch (error) {
-      setError("Failed to fetch documents");
-      console.error("Failed to fetch documents", error);
-    } finally {
-      setLoading(false);
-    }
-  };
   const handleDeleteTemplate = async (docId) => {
+    if (!projectData?._id) return;
+
     console.log(`Deleting `, docId);
     try {
       const response = await deleteTemplate(projectData._id, docId);
@@ -241,6 +271,8 @@ const NeoProjectTemplates = () => {
   };
 
   const handleDeleteDocument = async (doc_id) => {
+    if (!projectData?._id) return;
+
     console.log("deleteing document", doc_id);
     const response = await deleteDocument(projectData._id, doc_id);
     if (response) {
@@ -299,15 +331,13 @@ const NeoProjectTemplates = () => {
     <div className='flex'>
       <div className='flex flex-col w-full'>
         <div className='flex text-gray-400 text-xs p-3'>
-          {projectData.projectName}
+          {projectData?.projectName || 'Unknown Project'}
         </div>
-        <div className='m-2'>
-          <SearchHeader projectId={projectData._id} hasProject={true} />
-        </div>
+        
         {/*   <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-52 rounded-lg mt-4 ml-4 p-10 hidden" style={{height:'220px'}}>
-      
+
       <div className="relative w-[500px] mx-auto " style={{width:'500px'}}>
-  
+
   <BsSearch className="absolute h-max top-1/2 left-5 transform -translate-y-1/2 pointer-events-none" />
   <input
     className="w-full pl-10 py-2 border border-gray-300 rounded-full text-sm outline-none"
@@ -369,7 +399,7 @@ const NeoProjectTemplates = () => {
             </button>
 
             <h2 className='text-2xl font-semibold mb-4 text-left'>
-              Saved Templates for {projectData.projectName}
+              Saved Templates for {projectData?.projectName || 'Unknown Project'}
             </h2>
             <div className='flex justify-center'>
               {loading && <div>Loading...</div>}
@@ -391,7 +421,7 @@ const NeoProjectTemplates = () => {
 
           <div className='w-full max-w-5xl gap-x-4 space-y-4 ml-4'>
             <h2 className='text-2xl font-semibold mb-4 text-left'>
-              Documents with Template Names 
+              Documents with Template Names
          </h2>
             <div className='flex justify-center gap-x-8 gap-y-8'>
               {loading && <div>Loading...</div>}

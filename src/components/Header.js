@@ -6,6 +6,10 @@ import { useNavigate } from 'react-router-dom';
 const Header = ({ toggleNavigation }) => {
     const navigate = useNavigate();
 
+    const NEOEXECUTIVE = "68621597db15fbb9bbd2f838";
+  const NEOEXPERT = "68621581db15fbb9bbd2f836";
+  const ADMIN = "68621571db15fbb9bbd2f834";
+
     return (
         <header className="fixed top-0 left-0 right-0 z-40 customBlue shadow-sm h-16 flex items-center" style={{ paddingLeft: '5rem' }}>
             <nav className="py-3  flex justify-between items-center w-full">

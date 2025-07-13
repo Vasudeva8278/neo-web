@@ -59,42 +59,89 @@ const HighlightTable = ({ highlightsArray, templateId, filename }) => {
 
   console.log(templateId, filename);
   const fetchData = async () => {
-    const response = await getDocumentsListByTemplateId(projectId, templateId);
-    const templateName = response?.templateName;
-    setTemplateName(templateName);
-    const data = response?.documents;
-    setMsDocument(data);
-    console.log(data);
+    // Add validation before making API call
+    if (!templateId || !projectId) {
+      console.error('Missing required parameters:', { templateId, projectId });
+      setTableData(
+        highlightsArray.map((highlight) => ({
+          ...highlight,
+          id: uuidv4(),
+          templateId,
+        }))
+      );
+      return;
+    }
 
-    const items =
-      data.length > 0
+    try {
+      console.log('Fetching documents for:', { projectId, templateId });
+      const response = await getDocumentsListByTemplateId(projectId, templateId);
+      
+      if (!response) {
+        console.warn('No response received from API');
+        setTableData(
+          highlightsArray.map((highlight) => ({
+            ...highlight,
+            id: uuidv4(),
+            templateId,
+          }))
+        );
+        return;
+      }
+
+      const templateName = response?.templateName;
+      setTemplateName(templateName || '');
+      const data = response?.documents || [];
+      setMsDocument(data);
+      console.log('Documents fetched:', data);
+
+      const items = data.length > 0
         ? data.map((item) => ({
             id: item._id,
-            image: item?.thumbnail, // Assuming `thumbnail` exists in each item
-            title: item.fileName,
-            description: item.highlights
+            image: item?.thumbnail,
+            title: item.fileName || 'Untitled Document',
+            description: (item.highlights || [])
               .filter((highlight) => highlight.type === "text")
               .map((highlight) => highlight.text)
               .join(" "),
           }))
         : [];
 
-    setItems(items);
-    setTableData(
-      data.length > 0
-        ? data
-        : highlightsArray.map((highlight) => ({
-            ...highlight,
-            id: uuidv4(),
-            templateId,
-          }))
-    );
+      setItems(items);
+      setTableData(
+        data.length > 0
+          ? data
+          : highlightsArray.map((highlight) => ({
+              ...highlight,
+              id: uuidv4(),
+              templateId,
+            }))
+      );
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      // Fallback to highlight array data instead of breaking the component
+      setTableData(
+        highlightsArray.map((highlight) => ({
+          ...highlight,
+          id: uuidv4(),
+          templateId,
+        }))
+      );
+      
+      // Optional: Show user-friendly error message
+      if (error.response?.status === 500) {
+        console.error('Server error occurred. Using fallback data.');
+      } else if (error.response?.status === 404) {
+        console.warn('Template not found. Creating new documents from highlights.');
+      }
+    }
   };
 
   useEffect(() => {
-    console.log(templateId);
-    fetchData();
-  }, [highlightsArray, templateId]);
+    console.log('HighlightTable useEffect triggered:', { templateId, projectId });
+    if (templateId && highlightsArray?.length > 0) {
+      fetchData();
+    }
+  }, [highlightsArray, templateId, projectId]);
 
   const viewAllDocument = (docId) => {
     navigate(`/docviewall/${templateId}?projectId=${projectId}`);

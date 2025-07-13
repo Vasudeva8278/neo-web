@@ -13,6 +13,7 @@ const SearchBar = ({ onSearch }) => {
 
   return (
     <div className="flex justify-end p-4 bg-gray-100">
+      
       <div className="relative">
         <input
           type="text"

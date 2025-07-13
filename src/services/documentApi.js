@@ -107,15 +107,90 @@ export const getDocumentsByTemplateId = async (templateId) => {
 
 // Get Documents by Template ID
 export const getDocumentsListByTemplateId = async (projectId, templateId) => {
-  try {
-    const response = await api.get(
-      `/projectDocs/${projectId}/template-documents/${templateId}`
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error while fetching documents by template ID", error);
-    throw error;
+  // Input validation
+  if (!projectId || !templateId) {
+    throw new Error('Project ID and Template ID are required');
   }
+
+  // Validate ID format (basic check)
+  if (typeof projectId !== 'string' || typeof templateId !== 'string') {
+    throw new Error('Project ID and Template ID must be valid strings');
+  }
+
+  if (projectId.length < 24 || templateId.length < 24) {
+    throw new Error('Invalid ID format');
+  }
+
+  const maxRetries = 3;
+  let lastError;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Attempt ${attempt}: Fetching documents for project ${projectId}, template ${templateId}`);
+      
+      const response = await api.get(
+        `/projectDocs/${projectId}/template-documents/${templateId}`,
+        {
+          timeout: 30000, // 30 second timeout
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      // Validate response structure
+      if (!response || !response.data) {
+        throw new Error('Invalid response structure');
+      }
+
+      const data = response.data;
+      
+      // Ensure proper data structure
+      const validatedData = {
+        templateName: data.templateName || 'Untitled Template',
+        documents: Array.isArray(data.documents) ? data.documents : [],
+      };
+
+      console.log(`Successfully fetched ${validatedData.documents.length} documents`);
+      return validatedData;
+
+    } catch (error) {
+      lastError = error;
+      console.error(`Attempt ${attempt} failed:`, error.message);
+
+      // Don't retry for client errors (4xx)
+      if (error.response?.status >= 400 && error.response?.status < 500) {
+        break;
+      }
+
+      // Don't retry on the last attempt
+      if (attempt === maxRetries) {
+        break;
+      }
+
+      // Wait before retrying (exponential backoff)
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+      console.log(`Retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  // Enhanced error reporting
+  const errorMessage = lastError?.response?.data?.error || 
+                      lastError?.response?.data?.message || 
+                      lastError?.message || 
+                      'Unknown error occurred';
+
+  const errorDetails = {
+    message: `Failed to fetch documents after ${maxRetries} attempts: ${errorMessage}`,
+    status: lastError?.response?.status,
+    projectId,
+    templateId,
+    attempts: maxRetries
+  };
+
+  console.error('Final error details:', errorDetails);
+  throw new Error(errorDetails.message);
 };
 
 // Get Home Page Documents

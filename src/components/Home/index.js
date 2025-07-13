@@ -1,8 +1,9 @@
 import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { AuthContext } from "../../context/AuthContext"; // adjust path if needed
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Navigation from "../Navigation";
+import TemplatesSidebar from "../TemplatesSidebar.tsx";
 import ProfileSettings from "../Profile/ProfileSettings";
 import Dashboard from "../Dashboard/Dashboard";
 import MainPage from "../MainPage";
@@ -23,11 +24,14 @@ import Clients from "../../pages/Clients";
 import ViewClient from "../../pages/ViewClient";
 import LandingPage from "../../pages/LandingPage.tsx";
 import UserManage from "../../pages/UserManage";
-import RoleFeatureManagement from "../RoleFeatureManagement";   
+import RoleFeatureManagement from "../RoleFeatureManagement";  
+
 const Home = () => {
   const [isNavigationVisible, setIsNavigationVisible] = useState(true);
   const [roleFeatures, setRoleFeatures] = useState([]);
   const [featuresLoading, setFeaturesLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const location = useLocation();
 
   // Get user from context or localStorage
   const { user } = useContext(AuthContext);
@@ -37,7 +41,7 @@ const Home = () => {
     const fetchRoleFeatures = async () => {
       if (roleId) {
         try {
-          const API_URL = process.env.REACT_APP_API_URL || "http://localhost:7000";
+          const API_URL = process.env.REACT_APP_API_URL || "http://13.201.64.165:7000";
           const res = await axios.get(`${API_URL}/api/roles/${roleId}`);
           setRoleFeatures(res.data.features || []);
         } catch (error) {
@@ -53,6 +57,16 @@ const Home = () => {
     fetchRoleFeatures();
   }, [roleId]);
 
+  // Handle screen resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const toggleNavigation = () => {
     setIsNavigationVisible((prevState) => !prevState);
   };
@@ -66,13 +80,17 @@ const Home = () => {
       </div>
       <div className='flex flex-1'>
         {isNavigationVisible && (
-          <div className='w-3 sm:w-10 md:w-20'>
+          <div className={`${isMobile ? 'w-20' : 'w-64'} flex-shrink-0`}>
             <Navigation />
           </div>
         )}
-        <div className='flex-1 p-2 overflow-auto bg-gray-50 ml-10 sm:ml-0 md:ml-0 rounded-3xl mt-16 border-2 border-gray-200'>
+
+        {!isMobile && <TemplatesSidebar />}
+
+        <div className={`flex-1 p-2 overflow-auto bg-gray-50 rounded-3xl mt-16 border-2 border-gray-200 ${
+          isMobile ? 'ml-1' : 'ml-2'
+        }`}>
           <Routes>
-            {/* Example: Only show UserManage if user has 'Users' feature */}
             {roleFeatures.includes('Users') && (
               <Route path='/user-manage' element={<UserManage />} />
             )}

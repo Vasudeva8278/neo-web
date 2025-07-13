@@ -8,6 +8,8 @@ import {  getDocumentsListByTemplateId } from "../../services/documentApi";
 function DocumentContainer() {
   const [documents, setDocuments] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { id } = useParams();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -15,18 +17,93 @@ function DocumentContainer() {
 
   useEffect(() => {
     const fetchDocuments = async () => {
+      // Validate required parameters
+      if (!id || !projectId) {
+        setError('Missing required parameters: template ID or project ID');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await getDocumentsListByTemplateId(projectId,id);
+        setLoading(true);
+        setError(null);
+        console.log('Fetching documents for:', { projectId, templateId: id });
+        
+        const response = await getDocumentsListByTemplateId(projectId, id);
+        
+        if (!response) {
+          setError('No response received from server');
+          setDocuments([]);
+          return;
+        }
+
         const templateName = response?.templateName;
-        const data = response?.documents;
+        const data = response?.documents || [];
+        
+        if (data.length === 0) {
+          setError('No documents found for this template');
+        }
+        
         setDocuments(data);
+        console.log('Documents loaded successfully:', data.length);
+        
       } catch (error) {
         console.error("Failed to fetch documents", error);
+        
+        let errorMessage = 'Failed to fetch documents';
+        if (error.response?.status === 404) {
+          errorMessage = 'Template not found';
+        } else if (error.response?.status === 400) {
+          errorMessage = 'Invalid request parameters';
+        } else if (error.response?.status === 500) {
+          errorMessage = 'Server error occurred';
+        }
+        
+        setError(errorMessage);
+        setDocuments([]);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchDocuments();
-  }, [id]);
+  }, [id, projectId]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-lg">Loading documents...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-red-600 text-center">
+          <p className="text-lg font-semibold">Error</p>
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (documents.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <p className="text-lg">No documents available</p>
+          <p className="text-gray-600">Try creating a new document</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleNext = () => {
     if (currentIndex < documents.length - 1) {

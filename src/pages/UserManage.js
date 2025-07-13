@@ -9,6 +9,7 @@ import 'react-loading-skeleton/dist/skeleton.css';
 import bannerImage from "../Assets/Banner.jpg";
 import { FaTrash, FaEdit, FaSave } from 'react-icons/fa';
 import { useCallback } from 'react';
+import UserCard from '../components/UserCard';
 
 
 const api = axios.create({
@@ -34,12 +35,14 @@ const UserManage = () => {
   const [editRole, setEditRole] = useState({});
   const [roles, setRoles] = useState([]);
   const [roleLoading, setRoleLoading] = useState(true);
+  const [viewUserId, setViewUserId] = useState(null);
 
   // Fetch roles and their features
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const res = await axios.get('http://localhost:7000/api/roles/');
+        const API_URL = process.env.REACT_APP_API_URL || "http://13.201.64.165:7000";
+        const res = await axios.get(`${API_URL}/api/roles/`);
         setRoles(res.data);
       } catch (error) {
         toast.error('Failed to fetch roles');
@@ -59,7 +62,8 @@ const UserManage = () => {
       ? role.features.filter(f => f !== feature)
       : [...(role.features || []), feature];
     try {
-      await axios.put(`http://localhost:7000/api/roles/${roleId}`, { features: updatedFeatures });
+      const API_URL = process.env.REACT_APP_API_URL || "http://13.201.64.165:7000";
+      await axios.put(`${API_URL}/api/roles/${roleId}`, { features: updatedFeatures });
       setRoles(roles.map(r => r._id === roleId ? { ...r, features: updatedFeatures } : r));
       toast.success('Role features updated!');
     } catch (error) {
@@ -156,6 +160,7 @@ const UserManage = () => {
                 <th>Email</th>
                 <th >Role</th>
                 <th>Actions</th>
+                <th>View</th>
               </tr>
             </thead>
             <tbody>
@@ -199,13 +204,36 @@ const UserManage = () => {
                         <button className="edit-btn" disabled><FaEdit /></button>
                       )}
                     </td>
+                    <td>
+                      <button className="view-btn" title="View" onClick={() => setViewUserId(u._id)}>
+                        View
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-       
+        {/* UserCard Modal Overlay */}
+        {viewUserId && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.3)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <div style={{ position: 'relative' }}>
+              <UserCard onClose={() => setViewUserId(null)} />
+            </div>
+          </div>
+        )}
    
     </div>
     </>
